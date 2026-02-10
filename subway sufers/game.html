@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <title>Tic Tac Toc Ultra</title>
+    <style>
+        :root {
+            --bg: #050508;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --p1: #00f2ff;
+            --p2: #ff007b;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050508 100%);
+        }
+
+        /* Large Stylish Buttons */
+        .btn-main {
+            width: 280px;
+            padding: 20px;
+            margin: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: white;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-main:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--p1);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 242, 255, 0.2);
+        }
+
+        .btn-reset {
+            background: var(--p2);
+            border: none;
+            box-shadow: 0 10px 20px rgba(255, 0, 123, 0.3);
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 50px;
+            margin-bottom: 30px;
+            background: var(--glass);
+            padding: 20px 40px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        .score-item { text-align: center; }
+        .score-num { font-size: 40px; font-weight: 900; display: block; color: var(--p1); }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 110px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 15px;
+            position: relative;
+        }
+
+        .cell {
+            width: 110px;
+            height: 110px;
+            background: var(--glass);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .cell:hover { background: rgba(255, 255, 255, 0.08); border-color: white; }
+
+        svg.shape { width: 70px; height: 70px; fill: none; stroke-width: 9; stroke-linecap: round; }
+        .x-shape { stroke: var(--p1); filter: drop-shadow(0 0 12px var(--p1)); }
+        .o-shape { stroke: var(--p2); filter: drop-shadow(0 0 12px var(--p2)); }
+        .draw-path { stroke-dasharray: 200; stroke-dashoffset: 200; animation: draw 0.6s ease forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+
+        #reset-overlay {
+            position: absolute; inset: 0; background: rgba(5, 5, 8, 0.9);
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 100; border-radius: 20px;
+        }
+        #reset-overlay.show { display: flex; animation: fadeIn 0.3s forwards; }
+
+        .hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="menu">
+        <h1 style="font-size: 3rem; letter-spacing: 10px; margin-bottom: 40px; line-height: 1.2;">TIC TAC<br>TOC</h1>
+        <div style="display: flex; flex-direction: column;">
+            <button class="btn-main" onclick="startGame(1)">Single Player</button>
+            <button class="btn-main" onclick="startGame(2)">Two Players</button>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden">
+        <div class="scoreboard">
+            <div class="score-item">YOU <span class="score-num" id="score-x">0</span></div>
+            <div class="score-item">TIES <span class="score-num" id="score-tie" style="color:white">0</span></div>
+            <div class="score-item">CPU <span class="score-num" id="score-o">0</span></div>
+        </div>
+
+        <div class="board" id="board">
+            <div id="reset-overlay">
+                <h2 id="win-text" style="font-size: 2rem; margin-bottom: 20px;">X WINS!</h2>
+                <button class="btn-main btn-reset" onclick="resetBoard()">Next Round</button>
+            </div>
+            <div class="cell" onclick="play(0)"></div>
+            <div class="cell" onclick="play(1)"></div>
+            <div class="cell" onclick="play(2)"></div>
+            <div class="cell" onclick="play(3)"></div>
+            <div class="cell" onclick="play(4)"></div>
+            <div class="cell" onclick="play(5)"></div>
+            <div class="cell" onclick="play(6)"></div>
+            <div class="cell" onclick="play(7)"></div>
+            <div class="cell" onclick="play(8)"></div>
+        </div>
+        
+        <button onclick="location.reload()" style="background:none; border:none; color:#555; cursor:pointer; margin-top:30px; font-weight:bold;">EXIT TO MENU</button>
+    </div>
+
+    <script>
+        let board = Array(9).fill("");
+        let mode = 1, active = true, turn = "X", scores = {X:0, O:0, Tie:0};
+        const winPatterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+        function startGame(m) {
+            mode = m;
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+        }
+
+        function play(i) {
+            if (!active || board[i]) return;
+            doMove(i, turn);
+            if (active) {
+                if (mode === 1) {
+                    active = false;
+                    setTimeout(cpuMove, 600);
+                } else {
+                    turn = (turn === "X") ? "O" : "X";
+                }
+            }
+        }
+
+        function doMove(i, p) {
+            board[i] = p;
+            const cell = document.getElementsByClassName('cell')[i];
+            cell.innerHTML = (p === "X") ? 
+                `<svg class="shape x-shape" viewBox="0 0 100 100"><path class="draw-path" d="M25 25 L75 75 M75 25 L25 75"/></svg>` :
+                `<svg class="shape o-shape" viewBox="0 0 100 100"><circle class="draw-path" cx="50" cy="50" r="35"/></svg>`;
+            checkEnd(p);
+        }
+
+        function checkEnd(p) {
+            if (winPatterns.some(pat => pat.every(idx => board[idx] === p))) {
+                scores[p]++;
+                document.getElementById(`score-${p.toLowerCase()}`).innerText = scores[p];
+                endRound(p + " WINS!");
+            } else if (!board.includes("")) {
+                scores.Tie++;
+                document.getElementById('score-tie').innerText = scores.Tie;
+                endRound("DRAW!");
+            }
+        }
+
+        function endRound(txt) {
+            active = false;
+            document.getElementById('win-text').innerText = txt;
+            setTimeout(() => document.getElementById('reset-overlay').classList.add('show'), 600);
+        }
+
+        function resetBoard() {
+            board = Array(9).fill("");
+            active = true; turn = "X";
+            document.getElementById('reset-overlay').classList.remove('show');
+            Array.from(document.getElementsByClassName('cell')).forEach(c => c.innerHTML = "");
+        }
+
+        function cpuMove() {
+            let bestScore = -Infinity, move;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === "") {
+                    board[i] = "O";
+                    let score = minimax(board, 0, false);
+                    board[i] = "";
+                    if (score > bestScore) { bestScore = score; move = i; }
+                }
+            }
+            doMove(move, "O");
+            if (!document.getElementById('reset-overlay').classList.contains('show')) active = true;
+        }
+
+        function minimax(b, depth, isMax) {
+            if (winPatterns.some(p => p.every(i => b[i] === "O"))) return 10;
+            if (winPatterns.some(p => p.every(i => b[i] === "X"))) return -10;
+            if (!b.includes("")) return 0;
+            let currentScores = [];
+            for (let i = 0; i < 9; i++) {
+                if (b[i] === "") {
+                    b[i] = isMax ? "O" : "X";
+                    currentScores.push(minimax(b, depth + 1, !isMax));
+                    b[i] = "";
+                }
+            }
+            return isMax ? Math.max(...currentScores) : Math.min(...currentScores);
+        }
+    </script>
+</body>
+</html>
